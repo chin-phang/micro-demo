@@ -1,0 +1,50 @@
+name: micro-demo
+
+services:
+  couchbase:
+    image: couchbase:community-7.6.2
+    ports:
+      - 8091-8096:8091-8096 
+      - 11210-11211:11210-11211
+  postgres:
+    image: postgres:17.0
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - 5432:5432
+  redis:
+    image: redis:7.4
+    ports:
+      - 6379:6379
+  raabitmq:
+    image: rabbitmq:4.0-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+  consul-server1:
+    image: hashicorp/consul:1.19
+    depends_on:
+      - vault-server
+    ports:
+      - 8300:8300/tcp
+      - 8500:8500/tcp
+      - 8600:8600/tcp
+      - 8600:8600/udp  
+    command: consul agent -server -bootstrap-expect=1 -ui -client=0.0.0.0 -data-dir=/consul/data
+  vault-server:
+    image: hashicorp/vault:1.17
+    ports:
+      - 8200:8200
+    environment:
+      - VAULT_ADDR=http://vault-server:8200
+      - VAULT_API_ADDR=http://vault-server:8200
+      - VAULT_DEV_ROOT_TOKEN_ID=root 
+      - CONSUL_HTTP_ADDR=consul-server1:8500
+  traefik:
+    image: traefik:3.1
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+    ports:
+      - 8080:8080
+      - 80:80  

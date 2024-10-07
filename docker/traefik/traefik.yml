@@ -1,0 +1,24 @@
+entryPoints:
+  web:
+    address: :80
+
+providers:
+  consulCatalog:
+    prefix: traefik
+    endpoint:
+      address: 127.0.0.1:8500
+
+api:
+  insecure: true    
+
+http:
+  routers:
+    to-authentication:
+      rule: "Host(`localhost`) && PathPrefix(`/auth/`)"
+      service: authentication
+
+  services:
+    authentication: 
+      loadBalancer:
+        servers:
+        - url: http://localhost:8081/auth  
